@@ -95,7 +95,7 @@ function ARC4(seedArray, mixinArray, opts) {
             };
         },
         *[Symbol.iterator]() {
-            let iterator = arc4Generator(seedmixin, false, i, j);
+            let iterator = arc4Generator(seedmixin, true, i, j);
             for (let r of iterator) {
                 ({ i, j } = r);
                 yield r.v;

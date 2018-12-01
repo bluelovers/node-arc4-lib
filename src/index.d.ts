@@ -34,7 +34,7 @@ export declare function ARC4<T extends ISeedArray | any>(seedArray?: T | IOption
     readonly argvSeed: Exclude<T, IOptions<any>>;
     readonly argvMixin: IMixinArrayArgv;
     next(): number;
-    transform<T_1 extends Buffer | number[]>(buf: T_1): T_1;
+    transform<T_1 extends number[] | Buffer>(buf: T_1): T_1;
     readonly _seed: ISeedArray;
     readonly state: IARC4State<T>;
     [Symbol.iterator](): IterableIterator<number>;

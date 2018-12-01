@@ -167,7 +167,7 @@ export function ARC4<T extends ISeedArray | any>(seedArray?: T | IOptions<T>,
 
 		* [Symbol.iterator]()
 		{
-			let iterator = arc4Generator(seedmixin, false, i, j);
+			let iterator = arc4Generator(seedmixin, true, i, j);
 
 			for (let r of iterator)
 			{
