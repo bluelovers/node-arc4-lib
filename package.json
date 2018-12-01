@@ -2,9 +2,21 @@
   "name": "arc4-lib",
   "version": "1.0.0",
   "description": "",
+  "homepage": "https://github.com/bluelovers/node-arc4-lib#readme",
+  "bugs": {
+    "url": "https://github.com/bluelovers/node-arc4-lib/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bluelovers/node-arc4-lib.git"
+  },
   "license": "ISC",
   "author": "",
   "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
   "scripts": {
     "build-minify": "npx -r fast-glob -r fs-extra -r uglify-es -r ts-node ts-node ./test/script/minify",
     "build-seed": "npx ts-node ./test/script/seed.ts",
@@ -13,5 +25,6 @@
   "dependencies": {
     "expect": "^23.6.0",
     "ts-type": "^1.1.3"
-  }
+  },
+  "devDependencies": {}
 }

@@ -17,8 +17,6 @@ function mixinSeed(seedArray, mixinArray) {
     else if (!mixinArray) {
         mixinArray = INTERNAL_SEED_MIXIN_ARRAY;
     }
-    else {
-    }
     let mixinArrayLength = mixinArray.length;
     while (i--) {
         buf[i] = ((buf[i] + mixinArray[i % mixinArrayLength]) | 0) % util_1.ARC4_LENGTH;
@@ -131,6 +129,10 @@ function _arrayPadEntries(buf, targetLength = util_1.ARC4_LENGTH) {
     if (Buffer.isBuffer(buf)) {
         // @ts-ignore
         buf = Buffer.from(buf);
+    }
+    else {
+        // @ts-ignore
+        buf = Array.from(buf);
     }
     // @ts-ignore
     return buf;

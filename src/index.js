@@ -31,38 +31,51 @@ function ARC4(seedArray, mixinArray, opts) {
     }
     // @ts-ignore
     const seed = seed_1.handleSeed(seedArray, mixinArray);
-    const seedmixin = arc4mixin(seed);
-    //console.log(seed);
-    const iterator = arc4Generator(seedmixin, opts.loop);
-    //console.log(opts);
-    if (opts.state) {
-        return {
-            get seed() {
-                // @ts-ignore
-                return seedArray;
-            },
-            get _seed() {
-                return seed;
-            },
-            get state() {
-                return seedmixin;
-            },
-            next: iterator.next.bind(iterator)
-        };
-    }
-    return {
+    let seedmixin = arc4mixin(seed_1.arrayPadEntries(seed));
+    let iterator = arc4Generator(seedmixin, opts.loop);
+    //console.log(seed.slice(0, 10));
+    //console.log(seedmixin.slice(0, 10));
+    let base = {
         get seed() {
             // @ts-ignore
             return seedArray;
         },
-        next: iterator.next.bind(iterator)
+        next() {
+            return iterator.next();
+        },
+        get _seed() {
+            return seed;
+        },
+        get state() {
+            return seedmixin;
+        },
+        [Symbol.iterator]() {
+            return arc4Generator(seedmixin);
+        },
     };
+    if (!opts.loop) {
+        let arr = [];
+        let i = 0;
+        for (let v of iterator) {
+            arr[i++] = v;
+        }
+        iterator = arr[Symbol.iterator]();
+        base[Symbol.iterator] = function* () {
+            iterator = arr[Symbol.iterator]();
+            yield* iterator;
+        };
+    }
+    mixinArray = opts = null;
+    return base;
 }
 exports.ARC4 = ARC4;
 function arc4mixin(seedArray) {
     let buf = seed_1.arrayPadEntries(seedArray);
     let limit = util_1.ARC4_LENGTH;
     //let tmp: number[] = [];
+    //console.log(seedArray === buf);
+    //debugger;
+    //expect(seedArray).not.equal(buf);
     while (limit--) {
         //tmp[limit] = buf[limit] % ARC4_LENGTH;
         buf[limit] = limit;

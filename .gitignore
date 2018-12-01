@@ -57,3 +57,4 @@ tests/temp*
 !/test/script/*.ts
 /test/script/*.d.ts
 !/test/script/
+!/test/demo.ts

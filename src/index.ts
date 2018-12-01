@@ -12,7 +12,13 @@ export interface IOptions<T = ISeedArray>
 {
 	seedArray?: T,
 	mixinArray?: IMixinArrayArgv,
+	/**
+	 * make iterator never end
+	 */
 	loop?: boolean,
+	/**
+	 * show arc4 state and real seed
+	 */
 	state?: boolean,
 }
 
@@ -55,43 +61,63 @@ export function ARC4<T extends ISeedArray | any>(seedArray?: T | IOptions<T>, mi
 
 	// @ts-ignore
 	const seed = handleSeed(seedArray, mixinArray);
-	const seedmixin = arc4mixin(seed);
+	let seedmixin = arc4mixin(arrayPadEntries(seed));
+	let iterator = arc4Generator(seedmixin, opts.loop);
 
-	//console.log(seed);
+	//console.log(seed.slice(0, 10));
+	//console.log(seedmixin.slice(0, 10));
 
-	const iterator = arc4Generator(seedmixin, opts.loop);
-
-	//console.log(opts);
-
-	if (opts.state)
-	{
-		return {
-			get seed(): Exclude<T, IOptions>
-			{
-				// @ts-ignore
-				return seedArray
-			},
-			get _seed(): ISeedArray
-			{
-				return seed;
-			},
-			get state(): ISeedArray
-			{
-				return seedmixin;
-			},
-			next: iterator.next.bind(iterator) as typeof iterator.next
-		}
-	}
-
-	return {
+	let base = {
 		get seed(): Exclude<T, IOptions>
 		{
 			// @ts-ignore
 			return seedArray
 		},
 
-		next: iterator.next.bind(iterator) as typeof iterator.next
+		next()
+		{
+			return iterator.next()
+		},
+
+		get _seed(): ISeedArray
+		{
+			return seed;
+		},
+
+		get state(): ISeedArray
+		{
+			return seedmixin;
+		},
+
+		[Symbol.iterator]()
+		{
+			return arc4Generator(seedmixin);
+		},
+	};
+
+	if (!opts.loop)
+	{
+		let arr = [];
+		let i = 0;
+
+		for (let v of iterator)
+		{
+			arr[i++] = v;
+		}
+
+		iterator = arr[Symbol.iterator]();
+
+		base[Symbol.iterator] = function *()
+		{
+			iterator = arr[Symbol.iterator]();
+
+			yield * iterator
+		};
 	}
+
+	mixinArray = opts = null;
+
+	return base
 }
 
 export function arc4mixin<T extends ISeedArray>(seedArray: T): IARC4Data<T>
@@ -99,6 +125,11 @@ export function arc4mixin<T extends ISeedArray>(seedArray: T): IARC4Data<T>
 	let buf = arrayPadEntries(seedArray);
 	let limit = ARC4_LENGTH;
 	//let tmp: number[] = [];
+
+	//console.log(seedArray === buf);
+
+	//debugger;
+	//expect(seedArray).not.equal(buf);
 
 	while (limit--)
 	{

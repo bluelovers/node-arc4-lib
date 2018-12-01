@@ -24,10 +24,6 @@ export function mixinSeed<T extends ISeedArray>(seedArray: T, mixinArray?: IMixi
 	{
 		mixinArray = INTERNAL_SEED_MIXIN_ARRAY;
 	}
-	else
-	{
-
-	}
 
 	let mixinArrayLength = mixinArray.length;
 
@@ -188,6 +184,11 @@ export function _arrayPadEntries<T extends ITSArrayLikeWriteable<number> | Buffe
 	{
 		// @ts-ignore
 		buf = Buffer.from(buf)
+	}
+	else
+	{
+		// @ts-ignore
+		buf = Array.from(buf);
 	}
 
 	// @ts-ignore
