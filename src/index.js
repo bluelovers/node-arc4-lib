@@ -25,34 +25,107 @@ function ARC4(seedArray, mixinArray, opts) {
         seedArray = opts.seedArray || seedArray;
         mixinArray = opts.mixinArray;
     }
+    else {
+        opts = util_1.handleOptions(opts);
+        // @ts-ignore
+        seedArray = seedArray || opts.seedArray;
+        mixinArray = mixinArray || opts.mixinArray;
+    }
     opts = util_1.handleOptions(opts);
     if (typeof mixinArray === 'undefined') {
         mixinArray = null;
     }
-    // @ts-ignore
-    const seed = seed_1.handleSeed(seedArray, mixinArray);
-    let seedmixin = arc4mixin(seed_1.arrayPadEntries(seed));
-    let iterator = arc4Generator(seedmixin, opts.loop);
-    //console.log(seed.slice(0, 10));
-    //console.log(seedmixin.slice(0, 10));
+    let seedmixin;
+    let seed;
+    if (opts.s) {
+        // @ts-ignore
+        seedmixin = opts.s;
+        seedArray = mixinArray = null;
+    }
+    else {
+        // @ts-ignore
+        seed = seed_1.handleSeed(seedArray, mixinArray);
+        seedmixin = arc4mixin(seed);
+    }
+    const loop = !!opts.loop;
+    let { i, j } = opts;
+    let iterator = arc4Generator(seedmixin, opts.loop, i, j);
+    //console.log(seed.slice(0, 10), seed.length);
+    //console.log(seedmixin.slice(0, 10), seedmixin.length);
+    /*
+    saveToJson([__dirname, '..', 'test', '_seed.json'], {
+        seed,
+        seedmixin,
+    });
+    */
     let base = {
-        get seed() {
+        get argvSeed() {
             // @ts-ignore
             return seedArray;
         },
+        get argvMixin() {
+            // @ts-ignore
+            return mixinArray;
+        },
         next() {
-            return iterator.next();
+            let r = iterator.next().value;
+            ({ i, j } = r);
+            return r.v;
+        },
+        transform(buf) {
+            let fn = base[Symbol.iterator]();
+            // @ts-ignore
+            return buf.map((v) => {
+                let r = fn.next();
+                if (r.done) {
+                    fn = base[Symbol.iterator]();
+                    r = fn.next();
+                }
+                return v ^ r.value;
+            });
         },
         get _seed() {
             return seed;
         },
         get state() {
-            return seedmixin;
+            return {
+                i,
+                j,
+                s: seedmixin,
+            };
         },
-        [Symbol.iterator]() {
-            return arc4Generator(seedmixin);
+        *[Symbol.iterator]() {
+            let iterator = arc4Generator(seedmixin, false, i, j);
+            for (let r of iterator) {
+                ({ i, j } = r);
+                yield r.v;
+            }
+        },
+        toJSON() {
+            return {
+                argvSeed: base.argvSeed,
+                argvMixin: base.argvMixin,
+                _seed: base._seed,
+                state: base.state,
+            };
         },
     };
+    if (!opts.state) {
+        Object.defineProperties(base, {
+            argvSeed: {
+                get() { },
+            },
+            argvMixin: {
+                get() { },
+            },
+            _seed: {
+                get() { },
+            },
+            state: {
+                get() { },
+            },
+        });
+    }
     if (!opts.loop) {
         let arr = [];
         let i = 0;
@@ -62,13 +135,48 @@ function ARC4(seedArray, mixinArray, opts) {
         iterator = arr[Symbol.iterator]();
         base[Symbol.iterator] = function* () {
             iterator = arr[Symbol.iterator]();
-            yield* iterator;
+            for (let r of iterator) {
+                yield r.v;
+            }
         };
+        if (opts.state) {
+            base.next = () => {
+                let r = iterator.next();
+                if (r.done) {
+                    iterator = arr[Symbol.iterator]();
+                    r = iterator.next();
+                }
+                ({ i, j } = r.value);
+                return r.value.v;
+            };
+        }
+        else {
+            base.next = () => {
+                let r = iterator.next();
+                if (r.done) {
+                    iterator = arr[Symbol.iterator]();
+                    r = iterator.next();
+                }
+                return r.value.v;
+            };
+        }
+    }
+    else {
+        /*
+        let len = ARC4_LENGTH * 2;
+        while (len--)
+        {
+            iterator.next()
+        }
+        */
     }
     mixinArray = opts = null;
     return base;
 }
 exports.ARC4 = ARC4;
+/**
+ * transform data into arc4 buffer array
+ */
 function arc4mixin(seedArray) {
     let buf = seed_1.arrayPadEntries(seedArray);
     let limit = util_1.ARC4_LENGTH;
@@ -86,21 +194,24 @@ function arc4mixin(seedArray) {
     let seedLength = seedArray.length;
     let i = 0;
     let j = 0;
+    let k = i;
+    limit = Math.max(seedLength, limit);
     while (limit--) {
-        j = (j + buf[i] + seedArray[i % seedLength]) % util_1.ARC4_LENGTH;
-        let swap = buf[i];
-        buf[i] = buf[j];
+        k = i % util_1.ARC4_LENGTH;
+        j = (j + buf[k] + seedArray[i % seedLength]) % util_1.ARC4_LENGTH;
+        let swap = buf[k];
+        buf[k] = buf[j];
         buf[j] = swap;
         i++;
     }
     return buf;
 }
 exports.arc4mixin = arc4mixin;
-function* arc4Generator(buf, loop) {
+function* arc4Generator(buf, loop, i = 0, j = 0) {
     chai_1.expect(buf).lengthOf.gt(0);
+    chai_1.expect(i).gte(0);
+    chai_1.expect(j).gte(0);
     let index, swap;
-    let i = 0;
-    let j = 0;
     let len = buf.length;
     if (loop) {
         while (true) {
@@ -110,7 +221,11 @@ function* arc4Generator(buf, loop) {
             buf[i] = buf[j];
             buf[j] = swap;
             index = (buf[i] + buf[j]) % len;
-            yield buf[index];
+            yield {
+                v: buf[index],
+                i,
+                j,
+            };
         }
     }
     else {
@@ -122,7 +237,11 @@ function* arc4Generator(buf, loop) {
             buf[i] = buf[j];
             buf[j] = swap;
             index = (buf[i] + buf[j]) % len;
-            yield buf[index];
+            yield {
+                v: buf[index],
+                i,
+                j,
+            };
         }
     }
 }

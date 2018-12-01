@@ -1,9 +1,10 @@
+import { expect } from 'chai';
 import { ITSArrayLikeWriteable } from 'ts-type';
 import { IARC4Data, IHandleSeedInput, IMixinArrayArgv, ISeedArray } from './index';
 import { _numHex, ARC4_LENGTH, arrayFromIterator, createArray } from './util';
 import INTERNAL_SEED_MIXIN_ARRAY = require('../seed.json');
 
-export function seedFromUnsafeBuffer(len: number = ARC4_LENGTH, mixinArray?: IMixinArrayArgv): IARC4Data<Buffer>
+export function seedFromUnsafeBuffer(len: number = ARC4_LENGTH, mixinArray?: IMixinArrayArgv): Buffer
 {
 	return mixinSeed(Buffer.allocUnsafe(len || ARC4_LENGTH), mixinArray);
 }
@@ -11,18 +12,36 @@ export function seedFromUnsafeBuffer(len: number = ARC4_LENGTH, mixinArray?: IMi
 /**
  * mixin seedArray with mixinArray
  */
-export function mixinSeed<T extends ISeedArray>(seedArray: T, mixinArray?: IMixinArrayArgv): IARC4Data<T>
+export function mixinSeed<T extends ISeedArray>(seedArray: T, mixinArray?: IMixinArrayArgv, targetLength?: number): IHandleSeedInput<T>
 {
-	let buf = arrayPadEntries(seedArray);
+	if (targetLength)
+	{
+		targetLength |= 0;
+
+		targetLength = Math.max(Math.max(targetLength, ARC4_LENGTH), seedArray.length)
+	}
+	else
+	{
+		targetLength = Math.max(seedArray.length, ARC4_LENGTH)
+	}
+
+	let buf = _arrayPadEntries(seedArray, targetLength);
 	let i = buf.length;
+
+	//console.log(targetLength, i);
 
 	if (mixinArray === true)
 	{
-		mixinArray = createArray(ARC4_LENGTH, (v, i) => i)
+		mixinArray = createArray(ARC4_LENGTH, (v, i) => 0)
 	}
 	else if (!mixinArray)
 	{
 		mixinArray = INTERNAL_SEED_MIXIN_ARRAY;
+	}
+	else
+	{
+		expect(mixinArray).to.have.lengthOf.gt(0);
+		Array.from(mixinArray).forEach(v => expect(v).gte(0))
 	}
 
 	let mixinArrayLength = mixinArray.length;
@@ -32,6 +51,7 @@ export function mixinSeed<T extends ISeedArray>(seedArray: T, mixinArray?: IMixi
 		buf[i] = ((buf[i] + mixinArray[i % mixinArrayLength]) | 0) % ARC4_LENGTH;
 	}
 
+	// @ts-ignore
 	return buf;
 }
 
@@ -69,7 +89,7 @@ export function handleSeed<T extends ISeedArray | any | string | any[]>(input: T
 	else if (ti === 'string')
 	{
 		// @ts-ignore
-		input = Array.from(Buffer.from(input));
+		input = Array.from(input as string).map(v => v.charCodeAt(0));
 	}
 	else if (is_array || (deep < 1 && input[Symbol.iterator]))
 	{

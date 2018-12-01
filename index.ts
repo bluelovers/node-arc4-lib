@@ -4,5 +4,6 @@
 
 import * as ARC4Lib from './lib';
 export * from './lib';
-export { ARC4 } from './lib';
+import { ARC4 } from './lib';
+export { ARC4, ARC4Lib }
 export default ARC4Lib;

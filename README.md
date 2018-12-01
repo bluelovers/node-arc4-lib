@@ -1,6 +1,20 @@
+# arc4-lib
 
-import { ARC4, ARC4_LENGTH, seedFromUnsafeBuffer } from '../src';
-import { createArray } from '../src/util';
+    Iterable ARC4
+
+## install
+
+```
+npm install arc4-lib
+```
+
+## demo
+
+[index.d.ts](src/index.d.ts)
+
+```ts
+
+import { ARC4, ARC4_LENGTH, seedFromUnsafeBuffer } from 'arc4-lib';
 
 let mixinArray: number[];
 let seed: any = 'a any type seed';
@@ -96,3 +110,5 @@ function arc4rand()
 
 	return random
 }
+
+```

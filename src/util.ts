@@ -1,4 +1,4 @@
-import { IOptions } from './index';
+import { IHandleSeedInput, IOptions, ISeedArray } from './index';
 
 export const ARC4_LENGTH = 0x100;
 

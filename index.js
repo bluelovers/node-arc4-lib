@@ -6,7 +6,8 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 const ARC4Lib = require("./lib");
+exports.ARC4Lib = ARC4Lib;
 __export(require("./lib"));
-var lib_1 = require("./lib");
+const lib_1 = require("./lib");
 exports.ARC4 = lib_1.ARC4;
 exports.default = ARC4Lib;

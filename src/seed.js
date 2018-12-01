@@ -1,4 +1,5 @@
 Object.defineProperty(exports, "__esModule", { value: true });
+const chai_1 = require("chai");
 const util_1 = require("./util");
 const INTERNAL_SEED_MIXIN_ARRAY = require("../seed.json");
 function seedFromUnsafeBuffer(len = util_1.ARC4_LENGTH, mixinArray) {
@@ -8,19 +9,32 @@ exports.seedFromUnsafeBuffer = seedFromUnsafeBuffer;
 /**
  * mixin seedArray with mixinArray
  */
-function mixinSeed(seedArray, mixinArray) {
-    let buf = arrayPadEntries(seedArray);
+function mixinSeed(seedArray, mixinArray, targetLength) {
+    if (targetLength) {
+        targetLength |= 0;
+        targetLength = Math.max(Math.max(targetLength, util_1.ARC4_LENGTH), seedArray.length);
+    }
+    else {
+        targetLength = Math.max(seedArray.length, util_1.ARC4_LENGTH);
+    }
+    let buf = _arrayPadEntries(seedArray, targetLength);
     let i = buf.length;
+    //console.log(targetLength, i);
     if (mixinArray === true) {
-        mixinArray = util_1.createArray(util_1.ARC4_LENGTH, (v, i) => i);
+        mixinArray = util_1.createArray(util_1.ARC4_LENGTH, (v, i) => 0);
     }
     else if (!mixinArray) {
         mixinArray = INTERNAL_SEED_MIXIN_ARRAY;
+    }
+    else {
+        chai_1.expect(mixinArray).to.have.lengthOf.gt(0);
+        Array.from(mixinArray).forEach(v => chai_1.expect(v).gte(0));
     }
     let mixinArrayLength = mixinArray.length;
     while (i--) {
         buf[i] = ((buf[i] + mixinArray[i % mixinArrayLength]) | 0) % util_1.ARC4_LENGTH;
     }
+    // @ts-ignore
     return buf;
 }
 exports.mixinSeed = mixinSeed;
@@ -47,7 +61,7 @@ function handleSeed(input, mixinArray, deep) {
     }
     else if (ti === 'string') {
         // @ts-ignore
-        input = Array.from(Buffer.from(input));
+        input = Array.from(input).map(v => v.charCodeAt(0));
     }
     else if (is_array || (deep < 1 && input[Symbol.iterator])) {
         if (!Array.isArray(input)) {

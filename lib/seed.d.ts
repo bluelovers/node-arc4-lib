@@ -1,11 +1,11 @@
 /// <reference types="node" />
 import { ITSArrayLikeWriteable } from 'ts-type';
 import { IARC4Data, IHandleSeedInput, IMixinArrayArgv, ISeedArray } from './index';
-export declare function seedFromUnsafeBuffer(len?: number, mixinArray?: IMixinArrayArgv): IARC4Data<Buffer>;
+export declare function seedFromUnsafeBuffer(len?: number, mixinArray?: IMixinArrayArgv): Buffer;
 /**
  * mixin seedArray with mixinArray
  */
-export declare function mixinSeed<T extends ISeedArray>(seedArray: T, mixinArray?: IMixinArrayArgv): IARC4Data<T>;
+export declare function mixinSeed<T extends ISeedArray>(seedArray: T, mixinArray?: IMixinArrayArgv, targetLength?: number): IHandleSeedInput<T>;
 export declare function handleSeed<T extends ISeedArray | any | string | any[]>(input: T, mixinArray?: IMixinArrayArgv, deep?: number): IHandleSeedInput<T>;
 /**
  * clone current input and fill to fixed length (ARC4_LENGTH = 256)
