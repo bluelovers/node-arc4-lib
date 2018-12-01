@@ -1,7 +1,17 @@
 {
   "name": "arc4-lib",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Iterable ARC4",
+  "keywords": [
+    "arc4",
+    "buffer",
+    "crypto",
+    "encode",
+    "iterable",
+    "iterator",
+    "rc4",
+    "transform"
+  ],
   "homepage": "https://github.com/bluelovers/node-arc4-lib#readme",
   "bugs": {
     "url": "https://github.com/bluelovers/node-arc4-lib/issues"
